@@ -20,7 +20,7 @@ jobs:
           host: ${{ secrets.VPS_IP }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          scripts: |
+          script: |
             cd /home/ubuntu/weatherapp
             ls -a | grep .env && echo ".env file is present" || echo "WEATHER_API_KEY=${{secrets.WEATHER_API_KEY}}\nAPP_NAME=${{secrets.APP_NAME}}" > .env
             git pull
