@@ -1,0 +1,27 @@
+name: Deploy on VPS
+
+on:
+  push:
+    branches:
+      - master
+      - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          scipts: |
+            cd /home/ubuntu/weatherapp
+            ls -a | grep .env && echo ".env file is present" || echo "WEATHER_API_KEY=${{secrets.WEATHER_API_KEY}}\nAPP_NAME=${{secrets.APP_NAME}}" > .env
+            git pull
+            docker compose up -d --build

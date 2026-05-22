@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= appName %> — Atmospheric Dashboard</title>
+    <!-- Modern typography from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+      /* Register CSS properties for smooth gradient interpolation in modern browsers */
+      @property --gradient-color-1 {
+        syntax: '<color>';
+        inherits: false;
+        initial-value: #06080f;
+      }
+      @property --gradient-color-2 {
+        syntax: '<color>';
+        inherits: false;
+        initial-value: #1e1b4b;
+      }
+
+      :root {
+        /* Default colors mapped to Night state */
+        --gradient-color-1: #06080f;
+        --gradient-color-2: #1e1b4b;
+        --card-bg: rgba(15, 23, 42, 0.45);
+        --card-border: rgba(255, 255, 255, 0.08);
+        --card-hover-border: rgba(255, 255, 255, 0.18);
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-tertiary: #94a3b8;
+        --accent: #818cf8;
+        --accent-glow: rgba(129, 140, 248, 0.4);
+        --accent-glow-subtle: rgba(129, 140, 248, 0.15);
+        --shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+        --radius-lg: 24px;
+        --radius-md: 16px;
+        --radius-sm: 10px;
+        --transition-duration: 1s; /* Smooth 1s day/night transition */
+      }
+
+      /* Morning Theme: Crisp sunrise blues and apricots with high legibility contrasts */
+      body.theme-morning {
+        --gradient-color-1: #e0f2fe;
+        --gradient-color-2: #fed7aa;
+        --card-bg: rgba(255, 255, 255, 0.72); /* Darkened and made less translucent to satisfy color contrasts */
+        --card-bg-solid: #f8fafc;
+        --card-border: rgba(255, 255, 255, 0.8);
+        --card-hover-border: rgba(14, 165, 233, 0.45);
+        --text-primary: #0f172a;   /* WCAG-compliant highly visible text */
+        --text-secondary: #334155; /* Highly visible slate-700 gray */
+        --text-tertiary: #475569;  /* Highly visible slate-600 gray */
+        --accent: #0284c7;
+        --accent-glow: rgba(14, 165, 233, 0.3);
+        --accent-glow-subtle: rgba(14, 165, 233, 0.1);
+        --shadow: 0 12px 40px rgba(14, 165, 233, 0.08);
+      }
+
+      /* Afternoon Theme: Sunny golden amber & bright cyan with high legibility contrasts */
+      body.theme-afternoon {
+        --gradient-color-1: #fef08a;
+        --gradient-color-2: #93c5fd;
+        --card-bg: rgba(255, 255, 255, 0.75); /* Darkened backing for absolute contrast */
+        --card-bg-solid: #fff7ed;
+        --card-border: rgba(255, 255, 255, 0.85);
+        --card-hover-border: rgba(217, 119, 6, 0.5);
+        --text-primary: #0f172a;
+        --text-secondary: #334155;
+        --text-tertiary: #475569;
+        --accent: #ca8a04;
+        --accent-glow: rgba(217, 119, 6, 0.35);
+        --accent-glow-subtle: rgba(217, 119, 6, 0.1);
+        --shadow: 0 12px 40px rgba(217, 119, 6, 0.08);
+      }
+
+      /* Evening Theme: Deep warm sunset twilight gradient */
+      body.theme-evening {
+        --gradient-color-1: #fdba74;
+        --gradient-color-2: #3b0764;
+        --card-bg: rgba(30, 27, 75, 0.4);
+        --card-bg-solid: #2e0854;
+        --card-border: rgba(255, 255, 255, 0.12);
+        --card-hover-border: rgba(249, 115, 22, 0.4);
+        --text-primary: #ffffff;
+        --text-secondary: #e2e8f0;
+        --text-tertiary: #cbd5e1;
+        --accent: #f97316;
+        --accent-glow: rgba(249, 115, 22, 0.4);
+        --accent-glow-subtle: rgba(249, 115, 22, 0.15);
+        --shadow: 0 8px 32px rgba(249, 115, 22, 0.15);
+      }
+
+      /* Night Theme: Stellar cosmic navy, indigos, purples */
+      body.theme-night {
+        --gradient-color-1: #06080f;
+        --gradient-color-2: #1e1b4b;
+        --card-bg: rgba(15, 23, 42, 0.45);
+        --card-bg-solid: #16143c;
+        --card-border: rgba(255, 255, 255, 0.08);
+        --card-hover-border: rgba(129, 140, 248, 0.25);
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-tertiary: #94a3b8;
+        --accent: #818cf8;
+        --accent-glow: rgba(129, 140, 248, 0.4);
+        --accent-glow-subtle: rgba(129, 140, 248, 0.15);
+        --shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html, body {
+        overflow-x: hidden;
+        max-width: 100%;
+      }
+
+      body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        min-height: 100vh;
+        background: linear-gradient(135deg, var(--gradient-color-1) 0%, var(--gradient-color-2) 100%);
+        background-attachment: fixed;
+        color: var(--text-primary);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2.5rem 1.5rem;
+        transition: 
+          --gradient-color-1 var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1),
+          --gradient-color-2 var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1),
+          background var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1),
+          color 0.3s ease;
+        line-height: 1.5;
+      }
+
+      /* Standard dynamic background lighting effects */
+      body::before {
+        content: "";
+        position: absolute;
+        width: 400px;
+        height: 400px;
+        border-radius: 50%;
+        background: var(--accent-glow-subtle);
+        filter: blur(120px);
+        top: 10%;
+        left: 20%;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      /* Container limits */
+      .app-container {
+        width: 100%;
+        max-width: 1100px;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      /* GLASSMOPHISM COMMON COMPONENT */
+      .glass-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-lg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: var(--shadow);
+        padding: 2rem;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                    border-color 0.3s ease, 
+                    box-shadow 0.3s ease;
+      }
+
+      .glass-card:hover {
+        border-color: var(--card-hover-border);
+      }
+
+      /* NAVBAR AND TOP NAVIGATION */
+      .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        padding: 0.85rem 1.5rem;
+        gap: 1.5rem;
+        position: sticky;
+        top: 0;
+        z-index: 500;
+        margin-bottom: 0.5rem;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-decoration: none;
+        color: var(--text-primary);
+      }
+
+      .brand-logo-container {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-md);
+        background: var(--accent-glow-subtle);
+        border: 1px solid var(--card-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent);
+        box-shadow: 0 4px 12px var(--accent-glow-subtle);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .brand-logo-container::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0.2) 60%, transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+      }
+
+      .brand:hover .brand-logo-container::after {
+        transform: translateX(100%);
+      }
+
+      .brand h1 {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+      }
+
+      .brand span {
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--accent);
+        display: block;
+        margin-top: -2px;
+      }
+
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+      }
+
+      /* DYNAMIC CUSTOM DROPDOWN LANGUAGE SELECTOR IN NAVBAR */
+      .lang-dropdown-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.08);
+        border: 1px solid var(--card-border);
+        padding: 0.35rem 1.85rem 0.35rem 2rem;
+        border-radius: 30px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        transition: border-color 0.2s, box-shadow 0.2s;
+        height: 32px;
+      }
+
+      .lang-dropdown-wrapper:hover {
+        border-color: var(--accent);
+        box-shadow: 0 0 8px var(--accent-glow-subtle);
+      }
+
+      .lang-dropdown-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+      }
+
+      .lang-dropdown-arrow {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: var(--text-tertiary);
+        display: flex;
+        align-items: center;
+      }
+
+      .lang-select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        border: none;
+        outline: none;
+        background: transparent;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        padding: 0;
+        width: 100%;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .lang-select option {
+        background-color: var(--card-bg-solid, #1e293b);
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+
+      /* SEARCH BAR & AUTOCOMPLETE autocomplete dropdown styling */
+      .search-container {
+        position: relative;
+        flex-grow: 1;
+        max-width: 380px;
+        width: 100%;
+      }
+
+      .search-form {
+        display: flex;
+        width: 100%;
+      }
+
+      .search-wrapper {
+        position: relative;
+        width: 100%;
+        display: flex;
+        align-items: center;
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 0.85rem 1rem 0.85rem 2.75rem;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 500;
+        outline: none;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .search-input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-glow-subtle);
+      }
+
+      .search-icon-left {
+        position: absolute;
+        left: 1rem;
+        color: var(--text-secondary);
+        pointer-events: none;
+      }
+
+      .search-spinner {
+        position: absolute;
+        right: 1rem;
+        color: var(--accent);
+        animation: spin 1s linear infinite;
+        display: none;
+      }
+
+      @keyframes spin {
+        100% { transform: rotate(360deg); }
+      }
+
+      /* FLOATING DROPDOWN SUGGESTIONS */
+      .autocomplete-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-md);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        max-height: 250px;
+        overflow-y: auto;
+        z-index: 100;
+        display: none;
+        list-style: none;
+        padding: 0.5rem;
+      }
+
+      .autocomplete-item {
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary);
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+
+      .autocomplete-item:hover, .autocomplete-item.active {
+        background: var(--accent-glow-subtle);
+        color: var(--accent);
+      }
+
+      .autocomplete-item .region-country {
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin-left: auto;
+      }
+
+      /* ERROR CARD */
+      .error-card {
+        text-align: center;
+        padding: 3rem 2rem;
+        border-color: rgba(239, 68, 68, 0.3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .error-icon-box {
+        width: 60px;
+        height: 60px;
+        background: rgba(239, 68, 68, 0.15);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ef4444;
+        margin-bottom: 0.5rem;
+      }
+
+      .error-card h2 {
+        font-size: 20px;
+        font-weight: 600;
+      }
+
+      .error-card p {
+        font-size: 14px;
+        color: var(--text-secondary);
+        max-width: 480px;
+        line-height: 1.6;
+      }
+
+      .retry-btn {
+        margin-top: 0.5rem;
+        padding: 0.6rem 1.5rem;
+        background: var(--accent);
+        border: none;
+        border-radius: var(--radius-sm);
+        color: white;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: opacity 0.2s;
+        text-decoration: none;
+        box-shadow: 0 4px 14px var(--accent-glow);
+      }
+
+      .retry-btn:hover {
+        opacity: 0.9;
+      }
+
+      /* MAIN WEATHER GRID */
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 1.9fr;
+        gap: 2rem;
+      }
+
+      /* LEFT PANEL: HERO CURRENT WEATHER CARD */
+      .hero-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-top {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .location-tag {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .location-sub {
+        font-size: 12px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      .condition-box {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        margin: 2rem 0;
+      }
+
+      .weather-large-icon {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        filter: drop-shadow(0 8px 16px var(--accent-glow));
+        animation: float 4s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+      }
+
+      .temp-display {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .large-temp {
+        font-size: 72px;
+        font-weight: 300;
+        line-height: 1;
+        letter-spacing: -2px;
+        display: flex;
+        align-items: flex-start;
+      }
+
+      .large-temp span {
+        font-size: 32px;
+        font-weight: 400;
+        margin-top: 4px;
+        margin-left: 2px;
+        color: var(--accent);
+      }
+
+      .condition-label {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-top: 0.25rem;
+      }
+
+      .hero-bottom {
+        border-top: 1px solid var(--card-border);
+        padding-top: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .details-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .details-row span:first-child {
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+
+      .details-row span:last-child {
+        color: var(--text-primary);
+      }
+
+      /* RIGHT PANEL: GRID DETAIL MODULES */
+      .metrics-outer {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      .grid-title {
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1.25rem;
+      }
+
+      .metric-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-md);
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 1rem;
+        transition: border-color 0.3s, transform 0.3s;
+      }
+
+      .metric-card:hover {
+        border-color: var(--card-hover-border);
+        transform: translateY(-2px);
+      }
+
+      .metric-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .metric-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+
+      .metric-icon-box {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--radius-sm);
+        background: var(--accent-glow-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent);
+      }
+
+      .metric-value {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .metric-sub {
+        font-size: 11px;
+        color: var(--text-tertiary);
+        margin-top: -0.5rem;
+        font-weight: 500;
+      }
+
+      /* COMPASS ICON DIRECTION FOR WIND */
+      .wind-comp {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      .comp-arrow {
+        transition: transform 0.5s ease;
+        display: inline-block;
+      }
+
+      /* ASTRONOMY CARD LAYOUT */
+      .astro-card {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .astro-sub-box {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--card-border);
+        background: rgba(0, 0, 0, 0.05);
+      }
+
+      .astro-sub-box .astro-icon-big {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--accent-glow-subtle);
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .astro-sub-box div {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .astro-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .astro-value {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .astro-sub-box p {
+        font-size: 11px;
+        color: var(--text-tertiary);
+        margin-top: 1px;
+        font-weight: 500;
+      }
+
+      /* 3-DAY FORECAST SECTION */
+      .forecast-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .forecast-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+      }
+
+      .forecast-card {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1.75rem 1.25rem;
+        transition: transform 0.3s, border-color 0.3s;
+      }
+
+      .forecast-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--card-hover-border);
+      }
+
+      .forecast-day {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .forecast-date {
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin-top: -0.5rem;
+        font-weight: 500;
+      }
+
+      .forecast-icon {
+        width: 56px;
+        height: 56px;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 8px var(--accent-glow));
+      }
+
+      .forecast-temp {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        font-size: 18px;
+        font-weight: 700;
+        margin-top: 0.25rem;
+      }
+
+      .forecast-temp .max {
+        color: var(--text-primary);
+      }
+
+      .forecast-temp .min {
+        color: var(--text-secondary);
+        font-weight: 400;
+      }
+
+      .forecast-rain {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--accent);
+        background: var(--accent-glow-subtle);
+        padding: 0.25rem 0.6rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      .forecast-desc {
+        font-size: 12px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        max-width: 140px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* HISTORICAL ACCORDION EXPANSION SECTION */
+      .history-section {
+        margin-top: 1rem;
+      }
+
+      .history-header-btn {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem 2rem;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-lg);
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        outline: none;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: border-color 0.3s, background 0.3s;
+        box-shadow: var(--shadow);
+      }
+
+      .history-header-btn:hover {
+        border-color: var(--card-hover-border);
+      }
+
+      .history-header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .history-chevron {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        color: var(--accent);
+      }
+
+      .history-chevron.rotated {
+        transform: rotate(180deg);
+      }
+
+      .history-content-drawer {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-top: 0;
+      }
+
+      .history-content-drawer.open {
+        max-height: 500px;
+        margin-top: 1rem;
+      }
+
+      .history-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+      }
+
+      .history-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow: var(--shadow);
+      }
+
+      .history-day-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .history-date {
+        font-size: 12px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        margin-top: -0.5rem;
+      }
+
+      .history-icon {
+        width: 50px;
+        height: 50px;
+        object-fit: contain;
+      }
+
+      .history-temp {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .history-temp-sub {
+        font-size: 12px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        margin-top: -0.25rem;
+      }
+
+      .history-metrics {
+        display: flex;
+        justify-content: space-around;
+        width: 100%;
+        border-top: 1px solid var(--card-border);
+        padding-top: 0.75rem;
+        margin-top: 0.25rem;
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .history-metric-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+      }
+
+      .history-metric-box span:first-child {
+        color: var(--text-tertiary);
+      }
+
+      .history-metric-box span:last-child {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+
+      /* LOADING SKELETON ANIMATIONS FOR HISTORY MODULE */
+      .history-loading-container {
+        display: flex;
+        width: 100%;
+        gap: 1.5rem;
+      }
+
+      .skeleton-card {
+        flex: 1;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: var(--radius-lg);
+        height: 250px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        gap: 1.25rem;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+
+      .skeleton-item {
+        background: linear-gradient(90deg, var(--card-border) 25%, rgba(255,255,255,0.12) 50%, var(--card-border) 75%);
+        background-size: 200% 100%;
+        animation: loading-pulse 1.5s infinite;
+        border-radius: 4px;
+      }
+
+      @keyframes loading-pulse {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+
+      .skeleton-title { width: 60px; height: 14px; border-radius: 4px;}
+      .skeleton-subtitle { width: 80px; height: 11px; border-radius: 4px;}
+      .skeleton-icon { width: 50px; height: 50px; border-radius: 50%;}
+      .skeleton-temp { width: 90px; height: 22px; border-radius: 4px;}
+      .skeleton-footer { width: 100%; height: 35px; border-radius: var(--radius-sm);}
+
+      /* FOOTER */
+      footer {
+        margin-top: 3rem;
+        text-align: center;
+        font-size: 12px;
+        color: var(--text-tertiary);
+        font-weight: 500;
+      }
+
+      footer a {
+        color: var(--accent);
+        text-decoration: none;
+        transition: opacity 0.2s;
+      }
+
+      footer a:hover {
+        text-decoration: underline;
+      }
+
+      /* SCREEN RESPONSIVENESS MEDIA QUERIES */
+      @media (max-width: 900px) {
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .forecast-grid, .history-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: 1rem 0.5rem;
+        }
+        
+        .navbar {
+          padding: 0.65rem 0.75rem;
+          flex-wrap: wrap; /* Ensure clean wrapping so no overlapping layers block tap events */
+        }
+
+        .glass-card {
+          padding: 1.25rem 1rem; /* Save valuable horizontal space to prevent grid squishing */
+        }
+
+        .history-header-btn {
+          padding: 1rem 1.25rem; /* Save space for history trigger chevron */
+        }
+
+        .brand-logo-container {
+          width: 36px;
+          height: 36px;
+        }
+
+        .brand h1 {
+          font-size: 18px;
+        }
+
+        .brand span {
+          font-size: 8px;
+        }
+
+        .search-container {
+          max-width: 100%;
+          order: 3; /* Pushes autocomplete to its own row for pristine visual alignment on small viewports */
+          width: 100%;
+        }
+
+        .large-temp {
+          font-size: 58px;
+        }
+
+        .astro-card {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body class="theme-<%= theme %>">
+    <script>
+      // AUTOMATIC DEVICE-CLOCK THEME DETECTION (Runs immediately to block visual flashes)
+      (function() {
+        const hour = new Date().getHours();
+        let currentTheme = "night";
+        if (hour >= 6 && hour < 12) {
+          currentTheme = "morning";
+        } else if (hour >= 12 && hour < 17) {
+          currentTheme = "afternoon";
+        } else if (hour >= 17 && hour < 19.5) {
+          currentTheme = "evening";
+        } else {
+          currentTheme = "night";
+        }
+        document.body.className = 'theme-' + currentTheme;
+      })();
+    </script>
+
+    <div class="app-container">
+      
+      <!-- TOP NAVIGATION BAR -->
+      <nav class="glass-card navbar">
+        <a href="/" class="brand">
+          <div class="brand-logo-container">
+            <i data-lucide="cloud-lightning" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div>
+            <h1 data-translate="brand"><%= appName %></h1>
+            <span data-translate="brand_sub">Atmospheric Dashboard</span>
+          </div>
+        </a>
+
+        <!-- Premium dynamic autocomplete location search bar inside Navbar -->
+        <div class="search-container">
+          <form action="/" method="GET" class="search-form" id="searchForm">
+            <div class="search-wrapper">
+              <i data-lucide="search" class="search-icon-left" style="width: 16px; height: 16px;"></i>
+              <input 
+                type="text" 
+                name="q" 
+                class="search-input" 
+                placeholder="Search global atmospheres..." 
+                autocomplete="off"
+                value="<%= error ? location : location.name %>"
+                id="searchInput"
+                style="padding: 0.65rem 1rem 0.65rem 2.25rem; font-size: 13px;"
+              />
+              <i data-lucide="loader" class="search-spinner" id="searchSpinner" style="width: 16px; height: 16px;"></i>
+            </div>
+          </form>
+          <!-- Floating dynamic suggestions dropdown -->
+          <ul class="autocomplete-dropdown" id="autocompleteDropdown"></ul>
+        </div>
+
+        <div class="nav-actions">
+          <!-- Premium dynamic glass dropdown language selector in Navbar -->
+          <div class="lang-dropdown-wrapper">
+            <i data-lucide="languages" class="lang-dropdown-icon" style="width: 14px; height: 14px;"></i>
+            <select id="langSelect" class="lang-select" onchange="setLanguage(this.value)">
+              <option value="en">EN</option>
+              <option value="hi">हिंदी</option>
+            </select>
+            <i data-lucide="chevron-down" class="lang-dropdown-arrow" style="width: 12px; height: 12px;"></i>
+          </div>
+        </div>
+      </nav>
+
+      <% if (error) { %>
+        <!-- FRIENDLY GLASS ERROR STATE DISPLAY -->
+        <div class="glass-card error-card">
+          <div class="error-icon-box">
+            <i data-lucide="alert-triangle" style="width: 28px; height: 28px;"></i>
+          </div>
+          <h2 data-translate="err_title">Atmospheric Query Error</h2>
+          <p><%= error %></p>
+          <a href="/" class="retry-btn">
+            <span data-translate="err_btn">Return to Indore</span>
+          </a>
+        </div>
+      <% } else { %>
+        
+        <!-- MAIN DASHBOARD CONTENT GRID -->
+        <main class="dashboard-grid">
+          
+          <!-- LEFT CURRENT HERO WEATHER PANEL -->
+          <section class="glass-card hero-card">
+            <div class="hero-top">
+              <div class="location-tag">
+                <i data-lucide="map-pin" style="width: 18px; height: 18px; color: var(--accent);"></i>
+                <%= location.name %>
+              </div>
+              <div class="location-sub">
+                <%= location.region %>, <%= location.country %>
+              </div>
+
+              <!-- Main condition large icons -->
+              <div class="condition-box">
+                <img 
+                  src="https:<%= current.conditionIcon %>" 
+                  alt="<%= current.conditionText %>" 
+                  class="weather-large-icon"
+                />
+                <div class="temp-display">
+                  <div class="large-temp"><%= current.temp %><span>°C</span></div>
+                  <div class="condition-label translate-val"><%= current.conditionText %></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="hero-bottom">
+              <div class="details-row">
+                <span>
+                  <i data-lucide="thermometer" style="width: 14px; height: 14px; margin-right: 2px;"></i>
+                  <span data-translate="feels_like">Feels Like</span>
+                </span>
+                <span><%= current.feelsLike %>°C</span>
+              </div>
+              <div class="details-row">
+                <span>
+                  <i data-lucide="clock" style="width: 14px; height: 14px; margin-right: 2px;"></i>
+                  <span data-translate="local_time">Local Time</span>
+                </span>
+                <span><%= new Date(location.localTime).toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit' }) %></span>
+              </div>
+              <div class="details-row">
+                <span>
+                  <i data-lucide="sun" style="width: 14px; height: 14px; margin-right: 2px;"></i>
+                  <span data-translate="solar_state">Solar State</span>
+                </span>
+                <span>
+                  <% if (location.isDay === 1) { %>
+                    <span data-translate="daylight">Bright Daylight</span>
+                  <% } else { %>
+                    <span data-translate="nightsky">Nocturnal Sky</span>
+                  <% } %>
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- RIGHT DETAIL STATS PANELS -->
+          <section class="metrics-outer">
+            <div>
+              <h2 class="grid-title">
+                <i data-lucide="activity" style="width: 16px; height: 16px;"></i>
+                <span data-translate="indicators">Key Indicators</span>
+              </h2>
+              <div class="metrics-grid">
+                
+                <!-- HUMIDITY -->
+                <div class="metric-card">
+                  <div class="metric-top">
+                    <span class="metric-label" data-translate="humidity">Humidity</span>
+                    <div class="metric-icon-box">
+                      <i data-lucide="droplet" style="width: 16px; height: 16px;"></i>
+                    </div>
+                  </div>
+                  <div class="metric-value"><%= current.humidity %>%</div>
+                  <div class="metric-sub" data-translate="humidity_sub">Water vapor concentration</div>
+                </div>
+
+                <!-- WIND -->
+                <div class="metric-card">
+                  <div class="metric-top">
+                    <span class="metric-label" data-translate="wind">Wind Velocity</span>
+                    <div class="metric-icon-box">
+                      <i data-lucide="wind" style="width: 16px; height: 16px;"></i>
+                    </div>
+                  </div>
+                  <div class="metric-value">
+                    <%= current.windKph %> <span style="font-size: 11px; color: var(--text-secondary)">km/h</span>
+                  </div>
+                  <div class="metric-sub wind-comp">
+                    <span class="comp-arrow" style="transform: rotate(45deg);">➤</span>
+                    <span data-translate="wind_dir_prefix">Direction:</span>&nbsp;<span class="translate-val"><%= current.windDir %></span>
+                  </div>
+                </div>
+
+                <!-- UV INDEX -->
+                <div class="metric-card">
+                  <div class="metric-top">
+                    <span class="metric-label" data-translate="uv">UV Radiation</span>
+                    <div class="metric-icon-box">
+                      <i data-lucide="sun-dim" style="width: 16px; height: 16px;"></i>
+                    </div>
+                  </div>
+                  <div class="metric-value"><%= current.uv %></div>
+                  <div class="metric-sub translate-val">
+                    <% if (current.uv <= 2) { %>Minimal Risk<% } else if (current.uv <= 5) { %>Moderate Risk<% } else { %>High Risk!<% } %>
+                  </div>
+                </div>
+
+                <!-- AIR PRESSURE -->
+                <div class="metric-card">
+                  <div class="metric-top">
+                    <span class="metric-label" data-translate="barometric">Barometric</span>
+                    <div class="metric-icon-box">
+                      <i data-lucide="gauge" style="width: 16px; height: 16px;"></i>
+                    </div>
+                  </div>
+                  <div class="metric-value"><%= current.pressure %> <span style="font-size: 11px; color: var(--text-secondary)">mb</span></div>
+                  <div class="metric-sub" data-translate="barometric_sub">Atmospheric pressure</div>
+                </div>
+
+                <!-- VISIBILITY -->
+                <div class="metric-card">
+                  <div class="metric-top">
+                    <span class="metric-label" data-translate="visibility">Visibility</span>
+                    <div class="metric-icon-box">
+                      <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+                    </div>
+                  </div>
+                  <div class="metric-value"><%= current.visibility %> <span style="font-size: 11px; color: var(--text-secondary)">km</span></div>
+                  <div class="metric-sub" data-translate="visibility_sub">Atmospheric transparency</div>
+                </div>
+
+                <!-- COMFORT INDEX -->
+                <div class="metric-card">
+                  <div class="metric-top">
+                    <span class="metric-label" data-translate="thermal_comfort">Thermal Comfort</span>
+                    <div class="metric-icon-box">
+                      <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i>
+                    </div>
+                  </div>
+                  <div class="metric-value translate-val">
+                    <% const comfort = current.temp - current.feelsLike; %>
+                    <% if (Math.abs(comfort) <= 1) { %>Excellent<% } else if (comfort > 1) { %>Cool Breeze<% } else { %>Heavy Heat<% } %>
+                  </div>
+                  <div class="metric-sub">
+                    <span data-translate="temp_offset">Temp offset:</span> <%= comfort > 0 ? '+' : '' %><%= comfort %>°C
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- ASTRONOMY METRICS SECTION -->
+            <div>
+              <h2 class="grid-title">
+                <i data-lucide="orbit" style="width: 16px; height: 16px;"></i>
+                <span data-translate="celestial">Celestial Dynamics</span>
+              </h2>
+              <div class="glass-card astro-card">
+                
+                <div class="astro-sub-box">
+                  <div class="astro-icon-big">
+                    <i data-lucide="sunrise" style="width: 22px; height: 22px;"></i>
+                  </div>
+                  <div>
+                    <span class="astro-label" data-translate="sunrise">Sunrise</span>
+                    <span class="astro-value"><%= astro.sunrise %></span>
+                  </div>
+                </div>
+
+                <div class="astro-sub-box">
+                  <div class="astro-icon-big">
+                    <i data-lucide="sunset" style="width: 22px; height: 22px;"></i>
+                  </div>
+                  <div>
+                    <span class="astro-label" data-translate="sunset">Sunset</span>
+                    <span class="astro-value"><%= astro.sunset %></span>
+                  </div>
+                </div>
+
+                <div class="astro-sub-box">
+                  <div class="astro-icon-big">
+                    <i data-lucide="moon" style="width: 22px; height: 22px;"></i>
+                  </div>
+                  <div>
+                    <span class="astro-label" data-translate="moon_phase">Moon Phase</span>
+                    <span class="astro-value translate-val" style="font-size:14px;"><%= astro.moon_phase %></span>
+                    <p><span data-translate="illum">Illum:</span> <%= astro.moon_illumination %>%</p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </section>
+        </main>
+
+        <!-- THREE-DAY DYNAMIC WEATHER FORECAST -->
+        <section class="forecast-section">
+          <h2 class="grid-title">
+            <i data-lucide="calendar" style="width: 16px; height: 16px;"></i>
+            <span data-translate="forecast_title">3-Day Forecast Grid</span>
+          </h2>
+          <div class="forecast-grid">
+            <% forecast.forEach(function(day) { %>
+              <div class="glass-card forecast-card">
+                <span class="forecast-day translate-val"><%= day.dayName %></span>
+                <span class="forecast-date"><%= new Date(day.date).toLocaleDateString("en-US", {month: 'short', day: 'numeric'}) %></span>
+                <img src="https:<%= day.conditionIcon %>" alt="<%= day.conditionText %>" class="forecast-icon" />
+                <div class="forecast-temp">
+                  <span class="max"><%= day.tempMax %>°</span>
+                  <span class="min"><%= day.tempMin %>°</span>
+                </div>
+                <div class="forecast-rain">
+                  <i data-lucide="cloud-rain" style="width: 11px; height: 11px;"></i>
+                  <%= day.chanceOfRain %>%
+                </div>
+                <div class="forecast-desc translate-val"><%= day.conditionText %></div>
+              </div>
+            <% }); %>
+          </div>
+        </section>
+
+        <!-- COLLAPSIBLE HISTORY SECTION -->
+        <section class="history-section">
+          <button class="history-header-btn" id="historyToggleBtn">
+            <div class="history-header-left">
+              <i data-lucide="history" style="width: 18px; height: 18px; color: var(--accent);"></i>
+              <span data-translate="history_btn">Explore Historical Trends</span>
+            </div>
+            <i data-lucide="chevron-down" class="history-chevron" id="historyChevron" style="width: 18px; height: 18px;"></i>
+          </button>
+          
+          <!-- Expandable drawer container -->
+          <div class="history-content-drawer" id="historyDrawer">
+            <!-- Loading placeholder state -->
+            <div class="history-loading-container" id="historySkeleton">
+              <div class="skeleton-card">
+                <div class="skeleton-item skeleton-title"></div>
+                <div class="skeleton-item skeleton-subtitle"></div>
+                <div class="skeleton-item skeleton-icon"></div>
+                <div class="skeleton-item skeleton-temp"></div>
+                <div class="skeleton-item skeleton-footer"></div>
+              </div>
+              <div class="skeleton-card">
+                <div class="skeleton-item skeleton-title"></div>
+                <div class="skeleton-item skeleton-subtitle"></div>
+                <div class="skeleton-item skeleton-icon"></div>
+                <div class="skeleton-item skeleton-temp"></div>
+                <div class="skeleton-item skeleton-footer"></div>
+              </div>
+              <div class="skeleton-card">
+                <div class="skeleton-item skeleton-title"></div>
+                <div class="skeleton-item skeleton-subtitle"></div>
+                <div class="skeleton-item skeleton-icon"></div>
+                <div class="skeleton-item skeleton-temp"></div>
+                <div class="skeleton-item skeleton-footer"></div>
+              </div>
+            </div>
+
+            <!-- Dynamic grid target for history items -->
+            <div class="history-grid" id="historyGrid" style="display: none;"></div>
+          </div>
+        </section>
+
+      <% } %>
+
+      <footer>
+        <p><%= appName %> Weather Dashboard &copy; 2026. Made with atmospheric precision. Powered by <a href="https://www.weatherapi.com/" target="_blank">WeatherAPI.com</a></p>
+      </footer>
+    </div>
+
+    <!-- MAIN CLIENT INTERACTIVITY SCRIPTS -->
+    <script>
+      // Initialize Lucide Icons
+      lucide.createIcons();
+
+      // TRANSLATION DICTIONARIES (English & Hindi)
+      const translations = {
+        en: {
+          brand: "<%= appName %>",
+          brand_sub: "Atmospheric Dashboard",
+          search_placeholder: "Search global atmospheres...",
+          err_title: "Atmospheric Query Error",
+          err_btn: "Return to Indore",
+          feels_like: "Feels Like",
+          local_time: "Local Time",
+          solar_state: "Solar State",
+          daylight: "Bright Daylight",
+          nightsky: "Nocturnal Sky",
+          indicators: "Key Indicators",
+          humidity: "Humidity",
+          humidity_sub: "Water vapor concentration",
+          wind: "Wind Velocity",
+          wind_dir_prefix: "Direction:",
+          uv: "UV Radiation",
+          barometric: "Barometric",
+          barometric_sub: "Atmospheric pressure",
+          visibility: "Visibility",
+          visibility_sub: "Atmospheric transparency",
+          thermal_comfort: "Thermal Comfort",
+          temp_offset: "Temp offset:",
+          celestial: "Celestial Dynamics",
+          sunrise: "Sunrise",
+          sunset: "Sunset",
+          moon_phase: "Moon Phase",
+          illum: "Illum:",
+          forecast_title: "3-Day Forecast Grid",
+          history_btn: "Explore Historical Trends",
+          history_err: "Could not load history analysis for this region. Verify API plan supports history queries.",
+          nav_dashboard: "Dashboard",
+          nav_forecast: "Forecast",
+          nav_trends: "Trends",
+          menu_title: "Navigation Menu",
+          drawer_lang: "Language Options",
+          range_label: "Range: "
+        },
+        hi: {
+          brand: "<%= appName %>",
+          brand_sub: "वायुमंडलीय डैशबोर्ड",
+          search_placeholder: "वैश्विक मौसम खोजें...",
+          err_title: "वायुमंडलीय क्वेरी त्रुटि",
+          err_btn: "इंदौर पर वापस जाएं",
+          feels_like: "महसूस होता है",
+          local_time: "स्थानीय समय",
+          solar_state: "सौर स्थिति",
+          daylight: "उज्ज्वल दिन का प्रकाश",
+          nightsky: "रात्रिकालीन आकाश",
+          indicators: "मुख्य संकेतक",
+          humidity: "आर्द्रता",
+          humidity_sub: "जल वाष्प सांद्रता",
+          wind: "पवन वेग",
+          wind_dir_prefix: "दिशा:",
+          uv: "यूवी विकिरण",
+          barometric: "बैरोमीटर का दबाव",
+          barometric_sub: "वायुमंडलीय दबाव",
+          visibility: "दृश्यता",
+          visibility_sub: "वायुमंडलीय पारदर्शिता",
+          thermal_comfort: "तापीय आराम",
+          temp_offset: "तापमान अंतर:",
+          celestial: "खगोलीय स्थिति",
+          sunrise: "सूर्योदय",
+          sunset: "सूर्यास्त",
+          moon_phase: "चंद्र कला",
+          illum: "चमक:",
+          forecast_title: "3-दिवसीय पूर्वानुमान",
+          history_btn: "ऐतिहासिक रुझान देखें",
+          history_err: "इस क्षेत्र के लिए इतिहास का डेटा लोड नहीं किया जा सका। सत्यापित करें कि एपीआई योजना इतिहास का समर्थन करती है।",
+          nav_dashboard: "डैशबोर्ड",
+          nav_forecast: "पूर्वानुमान",
+          nav_trends: "रुझान",
+          menu_title: "नेविगेशन मेनू",
+          drawer_lang: "भाषा बदलें",
+          range_label: "तापमान सीमा: "
+        }
+      };
+
+      const weatherTerms = {
+        "Sunny": "धूपदार",
+        "Clear": "साफ मौसम",
+        "Cloudy": "बादल छाए रहेंगे",
+        "Partly cloudy": "आंशिक रूप से बादल",
+        "Overcast": "पूर्ण रूप से बादलमय",
+        "Mist": "धुंध",
+        "Patchy rain nearby": "आसपास हल्की बारिश",
+        "Patchy light rain with thunder": "गरज के साथ हल्की बारिश",
+        "Moderate or heavy rain shower": "मध्यम या भारी बारिश",
+        "Thundery outbreaks possible": "गरज के साथ आंधी संभव",
+        "Blowing snow": "तेज हवा के साथ बर्फबारी",
+        "Fog": "कोहरा",
+        "Freezing fog": "जमता हुआ कोहरा",
+        "Heavy rain": "भारी वर्षा",
+        "Light rain": "हल्की बारिश",
+        "Light drizzle": "हल्की बूंदाबांदी",
+        "Moderate rain": "मध्यम वर्षा",
+        "Yesterday": "कल",
+        "2 Days Ago": "२ दिन पहले",
+        "3 Days Ago": "३ दिन पहले",
+        "Today": "आज",
+        "Tomorrow": "कल",
+        "Monday": "सोमवार",
+        "Tuesday": "मंगलवार",
+        "Wednesday": "बुधवार",
+        "Thursday": "गुरुवार",
+        "Friday": "शुक्रवार",
+        "Saturday": "शनिवार",
+        "Sunday": "रविवार",
+        "Minimal Risk": "न्यूनतम जोखिम",
+        "Moderate Risk": "सामान्य जोखिम",
+        "High Risk!": "उच्च जोखिम!",
+        "Excellent": "उत्कृष्ट",
+        "Cool Breeze": "ठंडी हवा",
+        "Heavy Heat": "अत्यधिक गर्मी",
+        "Waxing Gibbous": "वैक्सिंग गिब्बस",
+        "Waning Gibbous": "वानिंग गिब्बस",
+        "New Moon": "अमावस्या",
+        "Full Moon": "पूर्णिमा",
+        "Waxing Crescent": "वैक्सिंग क्रीसेंट",
+        "Waning Crescent": "वानिंग क्रीसेंट",
+        "First Quarter": "प्रथम चतुर्थांश",
+        "Third Quarter": "तृतीय चतुर्थांश"
+      };
+
+      // Active language setting (persisted in localStorage)
+      let activeLanguage = localStorage.getItem('aethera_lang') || 'en';
+
+      function setLanguage(lang) {
+        activeLanguage = lang;
+        localStorage.setItem('aethera_lang', lang);
+        
+        // Synchronize select dropdown value in navbar
+        const langSelect = document.getElementById('langSelect');
+        if (langSelect) {
+          langSelect.value = lang;
+        }
+
+        // Apply translations to static tags
+        document.querySelectorAll('[data-translate]').forEach(el => {
+          const key = el.getAttribute('data-translate');
+          if (translations[lang] && translations[lang][key]) {
+            el.textContent = translations[lang][key];
+          }
+        });
+
+        // Translate dynamic values returned from the API
+        document.querySelectorAll('.translate-val').forEach(el => {
+          const original = el.getAttribute('data-orig-val') || el.textContent.trim();
+          if (!el.getAttribute('data-orig-val')) {
+            el.setAttribute('data-orig-val', original);
+          }
+
+          if (lang === 'hi') {
+            if (weatherTerms[original]) {
+              el.textContent = weatherTerms[original];
+            } else {
+              // Try localized word replacements
+              let modified = original;
+              Object.keys(weatherTerms).forEach(key => {
+                modified = modified.replace(new RegExp(key, 'g'), weatherTerms[key]);
+              });
+              el.textContent = modified;
+            }
+          } else {
+            el.textContent = original;
+          }
+        });
+
+        // Translate input placeholders
+        const input = document.getElementById('searchInput');
+        if (input) {
+          input.placeholder = translations[lang].search_placeholder;
+        }
+
+        // Re-translate history if loaded
+        if (typeof historyLoaded !== 'undefined' && historyLoaded) {
+          translateHistoryGrid(lang);
+        }
+      }
+
+      function translateHistoryGrid(lang) {
+        document.querySelectorAll('#historyGrid .history-card').forEach(card => {
+          // Translate card titles
+          const title = card.querySelector('.history-day-title');
+          if (title) {
+            const orig = title.getAttribute('data-orig-val') || title.textContent.trim();
+            if (!title.getAttribute('data-orig-val')) title.setAttribute('data-orig-val', orig);
+            title.textContent = lang === 'hi' ? (weatherTerms[orig] || orig) : orig;
+          }
+
+          // Translate range label
+          const rangeSpan = card.querySelector('.history-temp-sub span[data-translate="range_label"]');
+          if (rangeSpan) {
+            rangeSpan.textContent = lang === 'hi' ? 'तापमान सीमा: ' : 'Range: ';
+          }
+
+          // Translate metrics labels
+          card.querySelectorAll('.history-metric-box').forEach(box => {
+            const labelSpan = box.querySelector('span:first-child');
+            if (labelSpan) {
+              const orig = labelSpan.getAttribute('data-orig-val') || labelSpan.textContent.trim();
+              if (!labelSpan.getAttribute('data-orig-val')) labelSpan.setAttribute('data-orig-val', orig);
+              
+              if (lang === 'hi') {
+                if (orig === 'Humidity') labelSpan.textContent = 'आर्द्रता';
+                if (orig === 'Wind Max') labelSpan.textContent = 'अधिकतम हवा';
+              } else {
+                labelSpan.textContent = orig;
+              }
+            }
+          });
+
+          // Translate footer condition
+          const footerDiv = card.querySelector('div[style*="font-size: 11px"]');
+          if (footerDiv) {
+            const orig = footerDiv.getAttribute('data-orig-val') || footerDiv.textContent.trim();
+            if (!footerDiv.getAttribute('data-orig-val')) footerDiv.setAttribute('data-orig-val', orig);
+            footerDiv.textContent = lang === 'hi' ? (weatherTerms[orig] || orig) : orig;
+          }
+        });
+      }
+
+
+
+      // Initialize translation on page load
+      window.addEventListener('DOMContentLoaded', () => {
+        setLanguage(activeLanguage);
+      });
+
+      // DYNAMIC SEARCH AUTOCOMPLETE LOGIC
+      const searchInput = document.getElementById('searchInput');
+      const autocompleteDropdown = document.getElementById('autocompleteDropdown');
+      const searchSpinner = document.getElementById('searchSpinner');
+      const searchForm = document.getElementById('searchForm');
+      
+      let debounceTimeout = null;
+      let activeItemIndex = -1;
+
+      if (searchInput && autocompleteDropdown) {
+        searchInput.addEventListener('input', (e) => {
+          const value = e.target.value.trim();
+          clearTimeout(debounceTimeout);
+          
+          if (value.length < 2) {
+            hideDropdown();
+            return;
+          }
+
+          // Trigger loading spinner
+          if (searchSpinner) searchSpinner.style.display = 'block';
+
+          // Debounce network requests by 300ms
+          debounceTimeout = setTimeout(() => {
+            fetch(`/api/search?q=${encodeURIComponent(value)}`)
+              .then(res => res.json())
+              .then(data => {
+                if (searchSpinner) searchSpinner.style.display = 'none';
+                renderSuggestions(data);
+              })
+              .catch(err => {
+                console.error("Autocomplete error:", err);
+                if (searchSpinner) searchSpinner.style.display = 'none';
+              });
+          }, 300);
+        });
+
+        // Keyboard navigation accessibility
+        searchInput.addEventListener('keydown', (e) => {
+          const items = autocompleteDropdown.querySelectorAll('.autocomplete-item');
+          if (!items.length) return;
+
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeItemIndex = (activeItemIndex + 1) % items.length;
+            highlightItem(items);
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeItemIndex = (activeItemIndex - 1 + items.length) % items.length;
+            highlightItem(items);
+          } else if (e.key === 'Enter') {
+            if (activeItemIndex > -1) {
+              e.preventDefault();
+              items[activeItemIndex].click();
+            }
+          } else if (e.key === 'Escape') {
+            hideDropdown();
+          }
+        });
+
+        // Hide autocomplete when clicking elsewhere
+        document.addEventListener('click', (e) => {
+          if (!searchInput.contains(e.target) && !autocompleteDropdown.contains(e.target)) {
+            hideDropdown();
+          }
+        });
+      }
+
+      function highlightItem(items) {
+        items.forEach((item, idx) => {
+          if (idx === activeItemIndex) {
+            item.classList.add('active');
+            // Auto scroll suggestion into view
+            item.scrollIntoView({ block: 'nearest' });
+          } else {
+            item.classList.remove('active');
+          }
+        });
+      }
+
+      function renderSuggestions(list) {
+        autocompleteDropdown.innerHTML = '';
+        activeItemIndex = -1;
+
+        if (!list || !list.length) {
+          hideDropdown();
+          return;
+        }
+
+        list.forEach(item => {
+          const li = document.createElement('li');
+          li.className = 'autocomplete-item';
+          li.innerHTML = `
+            <i data-lucide="map-pin" style="width: 14px; height: 14px; color: var(--accent);"></i>
+            <span>${item.name}</span>
+            <span class="region-country">${item.region ? item.region + ', ' : ''}${item.country}</span>
+          `;
+          
+          li.addEventListener('click', () => {
+            searchInput.value = item.name;
+            hideDropdown();
+            searchForm.submit();
+          });
+          
+          autocompleteDropdown.appendChild(li);
+        });
+
+        // Trigger Lucide updates for icons in autocomplete
+        lucide.createIcons();
+        autocompleteDropdown.style.display = 'block';
+      }
+
+      function hideDropdown() {
+        autocompleteDropdown.style.display = 'none';
+        autocompleteDropdown.innerHTML = '';
+        activeItemIndex = -1;
+      }
+
+      // ASYNCHRONOUS HISTORY COLLAPSIBLE ACCORDION LOGIC
+      const historyToggleBtn = document.getElementById('historyToggleBtn');
+      const historyDrawer = document.getElementById('historyDrawer');
+      const historyChevron = document.getElementById('historyChevron');
+      const historySkeleton = document.getElementById('historySkeleton');
+      const historyGrid = document.getElementById('historyGrid');
+      
+      let historyLoaded = false;
+      const currentQueryCity = "<%= error ? '' : location.name %>";
+
+      if (historyToggleBtn && historyDrawer) {
+        historyToggleBtn.addEventListener('click', () => {
+          const isOpen = historyDrawer.classList.contains('open');
+          
+          if (isOpen) {
+            // Close drawer
+            historyDrawer.classList.remove('open');
+            if (historyChevron) historyChevron.classList.remove('rotated');
+          } else {
+            // Open drawer
+            historyDrawer.classList.add('open');
+            if (historyChevron) historyChevron.classList.add('rotated');
+            
+            // If data is not yet loaded, trigger fetch
+            if (!historyLoaded && currentQueryCity) {
+              fetchHistoricalData(currentQueryCity);
+            }
+          }
+        });
+      }
+
+      function fetchHistoricalData(city) {
+        if (historySkeleton) historySkeleton.style.display = 'flex';
+        if (historyGrid) historyGrid.style.display = 'none';
+
+        fetch(`/api/history?q=${encodeURIComponent(city)}`)
+          .then(res => {
+            if (!res.ok) throw new Error("Failed to load records");
+            return res.json();
+          })
+          .then(data => {
+            renderHistoryData(data);
+            historyLoaded = true;
+          })
+          .catch(err => {
+            console.error("History fetching error:", err);
+            if (historySkeleton) {
+              const errMsg = translations[activeLanguage].history_err;
+              historySkeleton.innerHTML = `
+                <div class="glass-card error-card" style="width: 100%; min-height: 200px; padding: 2rem;">
+                  <i data-lucide="cloud-off" style="width: 24px; height: 24px; color: #ef4444;"></i>
+                  <p style="font-size: 13px; color: var(--text-secondary);">${errMsg}</p>
+                </div>
+              `;
+              lucide.createIcons();
+            }
+          });
+      }
+
+      function renderHistoryData(days) {
+        if (!historyGrid) return;
+        historyGrid.innerHTML = '';
+        
+        days.forEach(day => {
+          const card = document.createElement('div');
+          card.className = 'history-card';
+          
+          // Localization tags applied automatically on creation
+          card.innerHTML = `
+            <span class="history-day-title" data-orig-val="${day.dayName}">${activeLanguage === 'hi' ? (weatherTerms[day.dayName] || day.dayName) : day.dayName}</span>
+            <span class="history-date">${day.formattedDate}</span>
+            <img src="https:${day.conditionIcon}" alt="${day.conditionText}" class="history-icon" />
+            <div class="history-temp">${day.avgTemp}°C</div>
+            <div class="history-temp-sub"><span data-translate="range_label">${activeLanguage === 'hi' ? 'तापमान सीमा: ' : 'Range: '}</span>${day.tempMin}°C - ${day.tempMax}°C</div>
+            <div class="history-metrics">
+              <div class="history-metric-box">
+                <span data-orig-val="Humidity">${activeLanguage === 'hi' ? 'आर्द्रता' : 'Humidity'}</span>
+                <span>${day.humidity}%</span>
+              </div>
+              <div class="history-metric-box">
+                <span data-orig-val="Wind Max">${activeLanguage === 'hi' ? 'अधिकतम हवा' : 'Wind Max'}</span>
+                <span>${day.windKph} <span style="font-size:9px">km/h</span></span>
+              </div>
+            </div>
+            <div style="font-size: 11px; font-weight:600; color: var(--text-secondary); margin-top:0.25rem" data-orig-val="${day.conditionText}">
+              ${activeLanguage === 'hi' ? (weatherTerms[day.conditionText] || day.conditionText) : day.conditionText}
+            </div>
+          `;
+          historyGrid.appendChild(card);
+        });
+
+        // Hide skeleton & display actual historical grid content
+        if (historySkeleton) historySkeleton.style.display = 'none';
+        historyGrid.style.display = 'grid';
+      }
+    </script>
+  </body>
+</html>
