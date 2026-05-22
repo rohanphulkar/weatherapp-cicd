@@ -38,6 +38,5 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd /home/ubuntu/weatherapp
-            ls -a | grep .env && echo ".env file is present" || printf "WEATHER_API_KEY=%s\nAPP_NAME=%s\n" "${{ secrets.WEATHER_API_KEY }}" "${{ secrets.APP_NAME }}" > .env
             git pull
             docker compose up -d --build
