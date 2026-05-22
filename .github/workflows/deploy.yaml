@@ -14,6 +14,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Check Deployment Secrets
+        run: |
+          if [ -z "${{ secrets.VPS_IP }}" ]; then
+            echo "::error::VPS_IP is missing! Add it in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          if [ -z "${{ secrets.VPS_USER }}" ]; then
+            echo "::error::VPS_USER is missing! Add it in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          if [ -z "${{ secrets.VPS_SSH_KEY }}" ]; then
+            echo "::error::VPS_SSH_KEY is missing! Add it in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
       - name: Set up SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -22,6 +37,6 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd /home/ubuntu/weatherapp
-            ls -a | grep .env && echo ".env file is present" || echo "WEATHER_API_KEY=${{secrets.WEATHER_API_KEY}}\nAPP_NAME=${{secrets.APP_NAME}}" > .env
+            ls -a | grep .env && echo ".env file is present" || printf "WEATHER_API_KEY=%s\nAPP_NAME=%s\n" "${{ secrets.WEATHER_API_KEY }}" "${{ secrets.APP_NAME }}" > .env
             git pull
             docker compose up -d --build
